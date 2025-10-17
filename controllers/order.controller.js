@@ -49,8 +49,8 @@ export const getOrderById = async (req, res) => {
     }
 
     // Ensure user owns the order or is admin
-    if (order.user.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(401).json({ msg: 'Not authorized' });
+    if (order.user._id.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ msg: 'Not authorized' });
     }
 
     res.json(order);

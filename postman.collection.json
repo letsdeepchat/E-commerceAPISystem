@@ -1,0 +1,756 @@
+{
+  "info": {
+    "name": "eCommerce API Collection",
+    "description": "Complete API collection for eCommerce application with authentication, products, categories, cart, and orders",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345678"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "value",
+        "value": "{{authToken}}",
+        "type": "string"
+      },
+      {
+        "key": "key",
+        "value": "x-auth-token",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('authToken', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "register"]
+            },
+            "description": "Register a new user with name, email, and password"
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('authToken', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "login"]
+            },
+            "description": "Login an existing user and receive authentication token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "profile"]
+            },
+            "description": "Get the authenticated user's profile information"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            },
+            "description": "Retrieve all products (public endpoint)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Product",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}"]
+            },
+            "description": "Get details of a specific product by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('productId', jsonData._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Product\",\n  \"price\": 100,\n  \"description\": \"Test product description\",\n  \"category\": \"{{categoryId}}\",\n  \"stock\": 50,\n  \"image\": \"https://example.com/image.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            },
+            "description": "Create a new product (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product (Admin)",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 150,\n  \"stock\": 75\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}"]
+            },
+            "description": "Update an existing product (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product (Admin)",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}"]
+            },
+            "description": "Delete a product (admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "description": "Retrieve all categories (public endpoint)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories", "{{categoryId}}"]
+            },
+            "description": "Get details of a specific category by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('categoryId', jsonData._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Electronics\",\n  \"description\": \"Electronic devices and accessories\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "description": "Create a new category (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Category (Admin)",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Electronics\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories", "{{categoryId}}"]
+            },
+            "description": "Update an existing category (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Category (Admin)",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories", "{{categoryId}}"]
+            },
+            "description": "Delete a category (admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get User Cart",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cart"]
+            },
+            "description": "Get the authenticated user's cart"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Product to Cart",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cart"]
+            },
+            "description": "Add a product to the user's cart"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cart/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cart", "{{productId}}"]
+            },
+            "description": "Update the quantity of a product in the cart"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Product from Cart",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cart/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cart", "{{productId}}"]
+            },
+            "description": "Remove a product from the user's cart"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Get All Orders (Admin)",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            },
+            "description": "Get all orders (admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Order",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "{{orderId}}"]
+            },
+            "description": "Get a specific order by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('orderId', jsonData._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shippingAddress\": \"123 Test Street, City, State, ZIP\",\n  \"paymentMethod\": \"Credit Card\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            },
+            "description": "Create a new order from cart items"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status (Admin)",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-auth-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Shipped\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "{{orderId}}"]
+            },
+            "description": "Update order status (admin only)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

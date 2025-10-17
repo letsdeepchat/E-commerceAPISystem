@@ -8,6 +8,11 @@ export const register = async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({ msg: 'Please provide name, email, and password' });
+    }
+
     let user = await User.findOne({ email });
     if (user) {
       return res.status(400).json({ msg: 'User already exists' });
@@ -21,10 +26,14 @@ export const register = async (req, res) => {
     await user.save();
 
     const payload = { user: { id: user.id, role: user.role } };
-    jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN }, (err, token) => {
-      if (err) throw err;
-      res.status(201).json({ token });
+    const token = await new Promise((resolve, reject) => {
+      jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN }, (err, token) => {
+        if (err) reject(err);
+        else resolve(token);
+      });
     });
+
+    res.status(201).json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -38,19 +47,23 @@ export const login = async (req, res) => {
   try {
     let user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ msg: 'Invalid Credentials' });
+      return res.status(401).json({ msg: 'Invalid Credentials' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ msg: 'Invalid Credentials' });
+      return res.status(401).json({ msg: 'Invalid Credentials' });
     }
 
     const payload = { user: { id: user.id, role: user.role } };
-    jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN }, (err, token) => {
-      if (err) throw err;
-      res.json({ token });
+    const token = await new Promise((resolve, reject) => {
+      jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN }, (err, token) => {
+        if (err) reject(err);
+        else resolve(token);
+      });
     });
+
+    res.json({ token });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

@@ -2,35 +2,51 @@ import request from 'supertest';
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
 import orderRoutes from '../routes/order.routes.js';
+import userRoutes from '../routes/user.routes.js';
 import User from '../models/user.model.js';
 import Product from '../models/product.model.js';
 import Cart from '../models/cart.model.js';
 import Order from '../models/order.model.js';
+import Category from '../models/category.model.js';
+import { startMemoryServer } from './test-utils.js';
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 
 let adminToken;
 let userToken;
 let user;
 let orderId;
+let mongoServer;
 
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGO_URI);
+  mongoServer = await startMemoryServer();
+  const mongoUri = mongoServer.uri;
+  await mongoose.connect(mongoUri);
+  process.env.JWT_SECRET = 'testsecret';
+  process.env.JWT_EXPIRES_IN = '1h';
 
   await User.deleteMany({});
   await Product.deleteMany({});
   await Cart.deleteMany({});
   await Order.deleteMany({});
 
-  const admin = new User({ name: 'Admin', email: 'admin@test.com', password: 'password', role: 'admin' });
+  const category = new Category({ name: 'Test Category' });
+  await category.save();
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash('password', salt);
+
+  const admin = new User({ name: 'Admin', email: 'admin@test.com', password: hashedPassword, role: 'admin' });
   await admin.save();
 
-  user = new User({ name: 'User', email: 'user@test.com', password: 'password' });
+  user = new User({ name: 'User', email: 'user@test.com', password: hashedPassword });
   await user.save();
 
   const adminLogin = await request(app).post('/api/users/login').send({ email: 'admin@test.com', password: 'password' });
@@ -39,7 +55,7 @@ beforeAll(async () => {
   const userLogin = await request(app).post('/api/users/login').send({ email: 'user@test.com', password: 'password' });
   userToken = userLogin.body.token;
 
-  const product = new Product({ name: 'Test Product', price: 100, description: 'Test description' });
+  const product = new Product({ name: 'Test Product', price: 100, description: 'Test description', category: category._id, stock: 10 });
   await product.save();
 
   const cart = new Cart({ user: user._id, products: [{ product: product._id, quantity: 1 }] });
@@ -52,6 +68,7 @@ afterAll(async () => {
   await Cart.deleteMany({});
   await Order.deleteMany({});
   await mongoose.connection.close();
+  await mongoServer.stop();
 });
 
 describe('Order API', () => {
@@ -85,8 +102,16 @@ describe('Order API', () => {
 
   it('should not get another user\'s order as a regular user', async () => {
     // Create another user and order
-    const anotherUser = new User({ name: 'Another User', email: 'another@test.com', password: 'password' });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password', salt);
+    const anotherUser = new User({ name: 'Another User', email: 'another@test.com', password: hashedPassword });
     await anotherUser.save();
+    
+    // Create a cart with items for the another user
+    const product = await Product.findOne();
+    const anotherCart = new Cart({ user: anotherUser._id, items: [{ product: product._id, quantity: 1 }] });
+    await anotherCart.save();
+    
     const anotherUserLogin = await request(app).post('/api/users/login').send({ email: 'another@test.com', password: 'password' });
     const anotherUserToken = anotherUserLogin.body.token;
     const anotherOrderRes = await request(app).post('/api/orders').set('x-auth-token', anotherUserToken).send({ shippingAddress: '456 Other St' });
@@ -100,8 +125,8 @@ describe('Order API', () => {
     const res = await request(app)
       .put(`/api/orders/${orderId}`)
       .set('x-auth-token', adminToken)
-      .send({ status: 'Shipped' });
+      .send({ status: 'shipped' });
     expect(res.statusCode).toEqual(200);
-    expect(res.body).toHaveProperty('status', 'Shipped');
+    expect(res.body).toHaveProperty('status', 'shipped');
   });
 });

@@ -2,29 +2,42 @@ import request from 'supertest';
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
 import categoryRoutes from '../routes/category.routes.js';
+import userRoutes from '../routes/user.routes.js';
 import Category from '../models/category.model.js';
 import User from '../models/user.model.js';
+import { startMemoryServer } from './test-utils.js';
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 
 let adminToken;
 let userToken;
 let categoryId;
+let mongoServer;
 
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGO_URI);
+  mongoServer = await startMemoryServer();
+  const mongoUri = mongoServer.uri;
+  await mongoose.connect(mongoUri);
+  process.env.JWT_SECRET = 'testsecret';
+  process.env.JWT_EXPIRES_IN = '1h';
 
   // Create admin and user for testing
   await User.deleteMany({});
-  const admin = new User({ name: 'Admin', email: 'admin@test.com', password: 'password', role: 'admin' });
+  
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash('password', salt);
+  
+  const admin = new User({ name: 'Admin', email: 'admin@test.com', password: hashedPassword, role: 'admin' });
   await admin.save();
 
-  const user = new User({ name: 'User', email: 'user@test.com', password: 'password' });
+  const user = new User({ name: 'User', email: 'user@test.com', password: hashedPassword });
   await user.save();
 
   // Login as admin and user to get tokens
@@ -39,6 +52,7 @@ afterAll(async () => {
   await Category.deleteMany({});
   await User.deleteMany({});
   await mongoose.connection.close();
+  await mongoServer.stop();
 });
 
 describe('Category API', () => {
@@ -84,6 +98,6 @@ describe('Category API', () => {
   it('should delete a category as an admin', async () => {
     const res = await request(app).delete(`/api/categories/${categoryId}`).set('x-auth-token', adminToken);
     expect(res.statusCode).toEqual(200);
-    expect(res.body).toHaveProperty('message', 'Category removed');
+    expect(res.body).toHaveProperty('msg', 'Category removed');
   });
 });

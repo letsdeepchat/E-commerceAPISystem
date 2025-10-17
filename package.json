@@ -1,17 +1,26 @@
 {
-  "name": "express-api",
-  "description": "Simple api sample in Node",
+  "name": "ecommerce-api",
   "version": "1.0.0",
-  "private": true,
+  "description": "RESTful API for eCommerce application with authentication and product management",
   "main": "index.js",
   "type": "module",
-  "scripts": {
-    "dev": "nodemon index.js",
-    "start": "node index.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles"
+  "author": "Deepak",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
-  "author": "Google LLC",
-  "license": "Apache-2.0",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles --forceExit",
+    "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test:verbose": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --verbose",
+    "lint": "echo 'Add ESLint configuration'",
+    "format": "echo 'Add Prettier configuration'"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -23,18 +32,48 @@
     "mongoose": "^8.19.1"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "jest": "^30.2.0",
+    "mongodb-memory-server": "^10.1.2",
     "nodemon": "^3.1.10",
     "supertest": "^7.1.4",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },
-  "directories": {
-    "doc": "docs",
-    "test": "tests"
-  },
-  "keywords": [],
   "jest": {
-    "testEnvironment": "node"
-  }
+    "testEnvironment": "node",
+    "transform": {},
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js",
+      "**/__tests__/**/*.js"
+    ],
+    "collectCoverageFrom": [
+      "**/*.js",
+      "!**/node_modules/**",
+      "!**/coverage/**",
+      "!jest.config.js"
+    ],
+    "testTimeout": 30000
+  },
+  "keywords": [
+    "ecommerce",
+    "api",
+    "rest",
+    "express",
+    "mongodb",
+    "authentication",
+    "jwt",
+    "nodejs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/letsdeepchat/E-commerceAPISystem.git"
+  },
+  "bugs": {
+    "url": "https://github.com/letsdeepchat/E-commerceAPISystem.git/issues"
+  },
+  "homepage": "https://github.com/letsdeepchat/E-commerceAPISystem.git#readme"
 }
