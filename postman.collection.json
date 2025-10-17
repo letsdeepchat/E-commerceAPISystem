@@ -380,7 +380,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Electronics\",\n  \"description\": \"Electronic devices and accessories\"\n}"
+              "raw": "{\n  \"name\": \"Electronics\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/categories",
@@ -418,7 +418,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Electronics\",\n  \"description\": \"Updated description\"\n}"
+              "raw": "{\n  \"name\": \"Updated Electronics\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
@@ -526,7 +526,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "cart"]
             },
-            "description": "Add a product to the user's cart"
+            "description": "Add a product to the user's cart. Returns 201 for new cart, 200 for existing cart update."
           },
           "response": []
         },
@@ -701,14 +701,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"shippingAddress\": \"123 Test Street, City, State, ZIP\",\n  \"paymentMethod\": \"Credit Card\"\n}"
+              "raw": "{\n  \"shippingAddress\": \"123 Test Street, City, State, ZIP\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/orders",
               "host": ["{{baseUrl}}"],
               "path": ["api", "orders"]
             },
-            "description": "Create a new order from cart items"
+            "description": "Create a new order from cart items. User must have items in cart."
           },
           "response": []
         },
@@ -739,14 +739,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"Shipped\"\n}"
+              "raw": "{\n  \"status\": \"shipped\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/orders/{{orderId}}",
               "host": ["{{baseUrl}}"],
               "path": ["api", "orders", "{{orderId}}"]
             },
-            "description": "Update order status (admin only)"
+            "description": "Update order status (admin only). Valid status values: pending, shipped, delivered, cancelled"
           },
           "response": []
         }
