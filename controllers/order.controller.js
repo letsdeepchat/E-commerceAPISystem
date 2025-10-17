@@ -19,15 +19,31 @@ export const placeOrder = async (req, res) => {
 
   try {
     const cart = await Cart.findOne({ user: req.user.id }).populate('items.product');
-    if (!cart) {
+    if (!cart || cart.items.length === 0) {
       return res.status(400).json({ msg: 'Cart is empty' });
+    }
+
+    // Validate stock for all items before creating order
+    for (const item of cart.items) {
+      if (item.product.stock < item.quantity) {
+        return res.status(400).json({
+          msg: `Insufficient stock for product: ${item.product.name}. Available: ${item.product.stock}, Requested: ${item.quantity}`
+        });
+      }
+    }
+
+    // Start transaction-like operation: deduct stock from all products
+    for (const item of cart.items) {
+      item.product.stock -= item.quantity;
+      await item.product.save();
     }
 
     const order = new Order({
       user: req.user.id,
       items: cart.items,
       totalAmount: cart.items.reduce((acc, item) => acc + item.quantity * item.product.price, 0),
-      shippingAddress
+      shippingAddress,
+      status: 'pending'
     });
 
     await order.save();
@@ -36,7 +52,7 @@ export const placeOrder = async (req, res) => {
     res.status(201).json(order);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).json({ msg: 'Server Error: Failed to create order', error: err.message });
   }
 };
 
@@ -60,11 +76,38 @@ export const getOrderById = async (req, res) => {
   }
 };
 
+// Get user's order history
+export const getUserOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user.id })
+      .populate('items.product')
+      .populate('user', '-password')
+      .sort({ createdAt: -1 });
+
+    if (!orders || orders.length === 0) {
+      return res.json({ orders: [], msg: 'No orders found' });
+    }
+
+    res.json(orders);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ msg: 'Server Error', error: err.message });
+  }
+};
+
 // Update an order's status
 export const updateOrderStatus = async (req, res) => {
   const { status } = req.body;
 
   try {
+    // Validate status value
+    const validStatuses = ['pending', 'shipped', 'delivered', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        msg: `Invalid status. Allowed values: ${validStatuses.join(', ')}`
+      });
+    }
+
     const order = await Order.findById(req.params.id);
     if (!order) {
       return res.status(404).json({ msg: 'Order not found' });
@@ -76,6 +119,6 @@ export const updateOrderStatus = async (req, res) => {
     res.json(order);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).json({ msg: 'Server Error', error: err.message });
   }
 };

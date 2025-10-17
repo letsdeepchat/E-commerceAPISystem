@@ -1,14 +1,61 @@
 
 import Product from '../models/product.model.js';
 
-// Get all products
+// Get all products with pagination and filtering
 export const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find().populate('category');
-    res.json(products);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const category = req.query.category;
+    const minPrice = parseFloat(req.query.minPrice);
+    const maxPrice = parseFloat(req.query.maxPrice);
+    const search = req.query.search;
+
+    // Build filter object
+    let filter = {};
+
+    if (category) {
+      filter.category = category;
+    }
+
+    if (!isNaN(minPrice) || !isNaN(maxPrice)) {
+      filter.price = {};
+      if (!isNaN(minPrice)) filter.price.$gte = minPrice;
+      if (!isNaN(maxPrice)) filter.price.$lte = maxPrice;
+    }
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+
+    // Execute query
+    const products = await Product.find(filter)
+      .populate('category')
+      .limit(limit)
+      .skip(skip)
+      .sort({ createdAt: -1 });
+
+    // Get total count for pagination info
+    const total = await Product.countDocuments(filter);
+
+    res.json({
+      products,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalProducts: total,
+        productsPerPage: limit
+      }
+    });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).json({ msg: 'Server Error', error: err.message });
   }
 };
 

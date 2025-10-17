@@ -23,10 +23,29 @@ const ProductSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  image: {
+    type: String,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+// Middleware to update updatedAt before saving
+ProductSchema.pre('save', function (next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+// Middleware to update updatedAt on findByIdAndUpdate
+ProductSchema.pre('findByIdAndUpdate', function (next) {
+  this.set({ updatedAt: Date.now() });
+  next();
 });
 
 const Product = mongoose.model('Product', ProductSchema);

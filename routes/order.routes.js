@@ -1,6 +1,6 @@
 
 import express from 'express';
-import { getAllOrders, placeOrder, getOrderById, updateOrderStatus } from '../controllers/order.controller.js';
+import { getAllOrders, placeOrder, getOrderById, updateOrderStatus, getUserOrders } from '../controllers/order.controller.js';
 import { auth, adminAuth } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -41,6 +41,22 @@ const router = express.Router();
  *         description: Unauthorized
  */
 router.route('/').get(adminAuth, getAllOrders).post(auth, placeOrder);
+
+/**
+ * @swagger
+ * /api/orders/my-orders:
+ *   get:
+ *     summary: Get user's order history
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User's order history
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/my-orders', auth, getUserOrders);
 
 /**
  * @swagger
